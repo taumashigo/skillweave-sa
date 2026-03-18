@@ -1,0 +1,213 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-general-sans: 'DM Sans', system-ui, sans-serif;
+    --font-cabinet: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-jetbrains: 'JetBrains Mono', monospace;
+
+    --background: 0 0% 100%;
+    --foreground: 215 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 12%;
+    --primary: 160 84% 39%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 215 20% 96%;
+    --secondary-foreground: 215 25% 12%;
+    --muted: 215 20% 96%;
+    --muted-foreground: 215 16% 47%;
+    --accent: 215 20% 96%;
+    --accent-foreground: 215 25% 12%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 20% 91%;
+    --input: 215 20% 91%;
+    --ring: 160 84% 39%;
+    --radius: 0.625rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(215 20% 80%);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(215 20% 65%);
+}
+
+/* Loading skeleton animation */
+.skeleton {
+  @apply relative overflow-hidden bg-slate-100 rounded-md;
+}
+
+.skeleton::after {
+  content: '';
+  @apply absolute inset-0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, #059669, #1e3a5f);
+}
+
+/* Glass card effect */
+.glass-card {
+  @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 1px 3px rgba(0, 0, 0, 0.05),
+    0 6px 24px rgba(0, 0, 0, 0.05);
+}
+
+/* Premium card shadow */
+.card-premium {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 2px 4px rgba(0, 0, 0, 0.04),
+    0 12px 32px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+
+.card-premium:hover {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.03),
+    0 4px 8px rgba(0, 0, 0, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Progress ring */
+.progress-ring-circle {
+  transition: stroke-dashoffset 1s ease-in-out;
+}
+
+/* Drag states */
+.dragging {
+  @apply opacity-50 scale-105 rotate-2;
+  transition: all 0.15s ease;
+}
+
+.drop-target {
+  @apply border-2 border-dashed border-emerald-400 bg-emerald-50/50;
+  transition: all 0.2s ease;
+}
+
+.drop-target-active {
+  @apply border-emerald-500 bg-emerald-100/50 scale-[1.02];
+}
+
+/* Page transitions */
+.page-enter {
+  animation: slide-up 0.4s ease-out;
+}
+
+/* Validation badge */
+.badge-valid {
+  @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+}
+
+.badge-warning {
+  @apply bg-amber-50 text-amber-700 border border-amber-200;
+}
+
+.badge-invalid {
+  @apply bg-red-50 text-red-700 border border-red-200;
+}
+
+/* Toast notifications */
+.toast-success {
+  @apply bg-emerald-50 border-emerald-200 text-emerald-800;
+}
+
+.toast-error {
+  @apply bg-red-50 border-red-200 text-red-800;
+}
+
+/* Sidebar */
+.sidebar-link {
+  @apply flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200;
+}
+
+.sidebar-link:hover {
+  @apply bg-slate-100 text-slate-900;
+}
+
+.sidebar-link.active {
+  @apply bg-emerald-50 text-emerald-700;
+}
+
+/* Noise overlay for premium feel */
+.noise-overlay {
+  position: relative;
+}
+
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.015;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+}
+
+/* Dashboard grid */
+.dashboard-grid {
+  @apply grid gap-6;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+}
+
+/* Credential QR page */
+.credential-verified {
+  @apply bg-emerald-50 border-2 border-emerald-300 rounded-2xl p-8;
+}
+
+/* Stat card */
+.stat-card {
+  @apply bg-white rounded-xl border border-slate-200 p-5;
+}
+
+.stat-card .stat-value {
+  @apply text-2xl font-bold font-display text-slate-900;
+}
+
+.stat-card .stat-label {
+  @apply text-sm text-slate-500 mt-1;
+}
