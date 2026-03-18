@@ -137,14 +137,14 @@ export default function VerifyCredentialPage({
                     </div>
                   </div>
                 </div>
-                {meta.credits && (
+                {meta.credits !== undefined && (
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center">
                       <Shield className="h-4 w-4 text-slate-500" />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400">Credits (NQF {meta.nqf_level as string})</div>
-                      <div className="text-sm font-medium text-slate-900">{meta.credits as number} credits</div>
+                      <div className="text-xs text-slate-400">Credits (NQF {String(meta.nqf_level)})</div>
+                       <div className="text-sm font-medium text-slate-900">{String(meta.credits)} credits</div>
                     </div>
                   </div>
                 )}
