@@ -9,6 +9,7 @@ import {
   CheckCircle2, Globe, Heart,
 } from "lucide-react";
 import { Button, Badge, Card } from "@/components/ui";
+import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { SEED_MODULES, SEED_OPPORTUNITIES } from "@/data/seed";
