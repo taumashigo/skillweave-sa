@@ -52,7 +52,7 @@ export function useAuth() {
     }
   };
 
-  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
+   const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -62,11 +62,29 @@ export function useAuth() {
     });
 
     if (data?.user && !error) {
-      // Update profile with role
-      await supabase
+      // Wait a moment for the trigger to create the profile
+      await new Promise((r) => setTimeout(r, 1000));
+
+      // Update profile with full name and role
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({ full_name: fullName, role, email })
         .eq("user_id", data.user.id);
+
+      // If update fails (profile doesn't exist yet), try insert
+      if (profileError) {
+        await supabase
+          .from("profiles")
+          .upsert({
+            user_id: data.user.id,
+            full_name: fullName,
+            role,
+            email,
+          }, { onConflict: "user_id" });
+      }
+
+      // Refresh the profile in state
+      await fetchProfile(data.user.id);
     }
 
     return { data, error };
