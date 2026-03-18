@@ -47,8 +47,8 @@ export default function AdminModulesPage() {
                   <td className="py-2.5 px-3 text-center"><Badge variant={m.pricing_model === "free" ? "free" : "secondary"} className="text-[9px]">{m.pricing_model === "free" ? "Free" : formatCurrency(m.cost_cents)}</Badge></td>
                   <td className="py-2.5 px-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      {m.is_accredited && <Shield className="h-3 w-3 text-blue-500" title="Accredited" />}
-                      {m.employer_endorsed && <CheckCircle2 className="h-3 w-3 text-emerald-500" title="Endorsed" />}
+                      {m.is_accredited && <span title="Accredited"><Shield className="h-3 w-3 text-blue-500" /></span>}
+                      {m.employer_endorsed && <span title="Endorsed"><CheckCircle2 className="h-3 w-3 text-emerald-500" /></span>}
                     </div>
                   </td>
                   <td className="py-2.5 px-3 text-right"><Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="h-3.5 w-3.5" /></Button></td>
