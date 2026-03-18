@@ -42,7 +42,14 @@ const mockProgress = [
   { module: "Career Readiness & Job Search", progress: 100, credits: 10 },
   { module: "Workplace Professionalism", progress: 100, credits: 10 },
 ];
-
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.06, duration: 0.35 },
+  }),
+};
 const mockRemediation = {
   module: "Web Dev with JavaScript & React",
   trigger: "Low quiz score on React State Management",
