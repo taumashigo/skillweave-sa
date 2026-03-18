@@ -92,7 +92,7 @@ const adminLinks: SidebarLink[] = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-function getLinksForRole(role: UserRole): SidebarLink[] {
+function getLinksForRole(role: string): SidebarLink[] {
   switch (role) {
     case "employer": return employerLinks;
     case "provider": return providerLinks;
@@ -105,6 +105,7 @@ function getLinksForRole(role: UserRole): SidebarLink[] {
       { label: "Funded Modules", href: "/catalog", icon: Package },
       { label: "Impact Reports", href: "/sponsor/dashboard", icon: BarChart3 },
     ];
+    default: return learnerLinks;
   }
 }
 
