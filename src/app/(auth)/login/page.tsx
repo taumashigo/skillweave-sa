@@ -9,7 +9,9 @@ import { Button, Input, Label, Card, Separator } from "@/components/ui";
 import { useAuth } from "@/lib/hooks";
 import { toast } from "sonner";
 
-export default function LoginPage() {
+import { Suspense } from "react";
+
+function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -175,5 +177,12 @@ export default function LoginPage() {
         </motion.div>
       </div>
     </div>
+  );
+}
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <LoginForm />
+    </Suspense>
   );
 }
