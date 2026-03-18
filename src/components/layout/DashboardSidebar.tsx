@@ -34,6 +34,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/hooks";
 import { Avatar } from "@/components/ui";
 import type { UserRole } from "@/types";
 
@@ -116,6 +117,7 @@ export function DashboardSidebar({
   userAvatar,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
+  const { signOut } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const links = getLinksForRole(role);
@@ -194,7 +196,7 @@ export function DashboardSidebar({
               <Settings className="h-3.5 w-3.5" />
               Settings
             </Link>
-            <button className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+            <button onClick={async () => { await signOut(); window.location.href = "/login"; }} className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
               <LogOut className="h-3.5 w-3.5" />
               Log out
             </button>

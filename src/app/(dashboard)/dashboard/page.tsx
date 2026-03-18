@@ -18,8 +18,8 @@ import { useAuth } from "@/lib/hooks";
 import type { Module, Credential, Opportunity } from "@/types";
 
 export default function LearnerDashboard() {
-  const { profile } = useAuth();
-  const displayName = profile?.full_name || "Learner";
+  const { profile, isLoading } = useAuth();
+  const displayName = profile?.full_name && profile.full_name.trim() !== "" ? profile.full_name : profile?.email?.split("@")[0] || "Learner";
   
   const mockLearnerStats = {
   credits_earned: 67,
