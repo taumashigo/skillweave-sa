@@ -99,7 +99,12 @@ function getLinksForRole(role: UserRole): SidebarLink[] {
     case "mentor":
     case "assessor": return advisorLinks;
     case "admin": return adminLinks;
-    default: return learnerLinks;
+    case "sponsor": return [
+      { label: "Dashboard", href: "/sponsor/dashboard", icon: LayoutDashboard },
+      { label: "Learners", href: "/sponsor/dashboard", icon: Users },
+      { label: "Funded Modules", href: "/catalog", icon: Package },
+      { label: "Impact Reports", href: "/sponsor/dashboard", icon: BarChart3 },
+    ];
   }
 }
 

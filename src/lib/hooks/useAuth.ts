@@ -1,101 +1,95 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import { useAuthStore } from "@/lib/store";
 import type { Profile, UserRole } from "@/types";
-import type { User, Session } from "@supabase/supabase-js";
+import type { Session } from "@supabase/supabase-js";
 
 export function useAuth() {
   const { user: profile, isLoading, setUser, setLoading } = useAuthStore();
   const [session, setSession] = useState<Session | null>(null);
   const supabase = createSupabaseBrowser();
 
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-      }
-    });
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setUser(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const fetchProfile = async (userId: string) => {
-    setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", userId)
       .single();
-
     if (data && !error) {
       setUser(data as Profile);
     } else {
-      setUser(null);
+      setLoading(false);
     }
   };
 
-   const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (!mounted) return;
+      setSession(s);
+      if (s?.user) {
+        fetchProfile(s.user.id);
+      } else {
+        setUser(null);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      if (!mounted) return;
+      setSession(s);
+      if (s?.user) {
+        fetchProfile(s.user.id);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const signUp = async (email: string, password: string, fullName: string, role: UserRole) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        data: { full_name: fullName, role },
-      },
+      options: { data: { full_name: fullName, role } },
     });
-
     if (data?.user && !error) {
-      // Wait a moment for the trigger to create the profile
-      await new Promise((r) => setTimeout(r, 1000));
-
-      // Update profile with full name and role
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ full_name: fullName, role, email })
-        .eq("user_id", data.user.id);
-
-      // If update fails (profile doesn't exist yet), try insert
-      if (profileError) {
-        await supabase
-          .from("profiles")
-          .upsert({
-            user_id: data.user.id,
-            full_name: fullName,
-            role,
-            email,
-          }, { onConflict: "user_id" });
+      const { error: insertErr } = await supabase.from("profiles").insert({
+        user_id: data.user.id,
+        full_name: fullName,
+        role,
+        email,
+      });
+      if (insertErr) {
+        await supabase.from("profiles").update({ full_name: fullName, role, email }).eq("user_id", data.user.id);
       }
-
-      // Refresh the profile in state
-      await fetchProfile(data.user.id);
+      setUser({
+        id: data.user.id,
+        user_id: data.user.id,
+        full_name: fullName,
+        email,
+        role,
+        onboarding_completed: false,
+        country: "South Africa",
+        career_interests: [],
+        skills_interests: [],
+        target_jobs: [],
+        portfolio_public: false,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      } as Profile);
     }
-
     return { data, error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { data, error };
+    return await supabase.auth.signInWithPassword({ email, password });
   };
 
   const signOut = async () => {
@@ -105,34 +99,27 @@ export function useAuth() {
   };
 
   const signInWithOAuth = async (provider: "google" | "github") => {
-    const { data, error } = await supabase.auth.signInWithOAuth({
+    return await supabase.auth.signInWithOAuth({
       provider,
-      options: { redirectTo: `${window.location.origin}/dashboard` },
+      options: { redirectTo: window.location.origin + "/auth/callback" },
     });
-    return { data, error };
   };
 
   const resetPassword = async (email: string) => {
-    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    return await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + "/reset-password",
     });
-    return { data, error };
   };
 
   const updateProfile = async (updates: Partial<Profile>) => {
-    if (!session?.user) return { error: "Not authenticated" };
-
+    if (!session?.user) return { data: null, error: "Not authenticated" };
     const { data, error } = await supabase
       .from("profiles")
       .update({ ...updates, updated_at: new Date().toISOString() })
       .eq("user_id", session.user.id)
       .select()
       .single();
-
-    if (data && !error) {
-      setUser(data as Profile);
-    }
-
+    if (data && !error) setUser(data as Profile);
     return { data, error };
   };
 
