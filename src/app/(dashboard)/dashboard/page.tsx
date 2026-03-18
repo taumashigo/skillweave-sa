@@ -20,6 +20,39 @@ import type { Module, Credential, Opportunity } from "@/types";
 export default function LearnerDashboard() {
   const { profile } = useAuth();
   const displayName = profile?.full_name || "Learner";
+  
+  const mockLearnerStats = {
+  credits_earned: 67,
+  credits_target: 130,
+  modules_completed: 5,
+  modules_in_progress: 2,
+  milestones_earned: 2,
+  credentials_count: 4,
+  remediation_active: 1,
+  total_spent: 13490000,
+  remaining_cost: 29490000,
+};
+
+const mockProgress = [
+  { module: "Digital Literacy Foundations", progress: 100, credits: 12 },
+  { module: "Intro to Programming with Python", progress: 100, credits: 20 },
+  { module: "Professional Communication", progress: 100, credits: 12 },
+  { module: "Web Dev with JavaScript & React", progress: 72, credits: 25 },
+  { module: "Version Control with Git", progress: 45, credits: 8 },
+  { module: "Career Readiness & Job Search", progress: 100, credits: 10 },
+  { module: "Workplace Professionalism", progress: 100, credits: 10 },
+];
+
+const mockRemediation = {
+  module: "Web Dev with JavaScript & React",
+  trigger: "Low quiz score on React State Management",
+  score_before: 38,
+  suggestions: [
+    "Review: React State & Props - Booster Lesson",
+    "Practice: Interactive Exercises on useState",
+    "AI Tutor: Guided walkthrough of component lifecycle",
+  ],
+};
   const progressPercent = Math.round(
     (mockLearnerStats.credits_earned / mockLearnerStats.credits_target) * 100
   );
