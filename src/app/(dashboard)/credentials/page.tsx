@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { Award, ExternalLink, QrCode, Download, Eye, Shield, CheckCircle2 } from "lucide-react";
 import { Button, Badge, Card, EmptyState, Separator } from "@/components/ui";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
-import { SEED_CREDENTIALS } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
+import { useAuth } from "@/lib/hooks";
 import { formatDate } from "@/lib/utils";
 import type { Credential } from "@/types";
 
@@ -15,8 +16,16 @@ const typeLabels: Record<string, string> = {
   qualification: "Qualification", endorsement: "Endorsement",
 };
 
+const supabase = createSupabaseBrowser();
+
 export default function CredentialsPage() {
-  const credentials = SEED_CREDENTIALS as Credential[];
+  const { profile } = useAuth();
+  const [credentials, setCredentials] = React.useState<Credential[]>([]);
+  React.useEffect(() => {
+    if (!profile?.user_id) return;
+    supabase.from("credentials").select("*").eq("user_id", profile.user_id).order("issued_at", { ascending: false }).then(({ data }) => { if (data) setCredentials(data as Credential[]); });
+  }, [profile?.user_id]);
+  
 
   return (
     <DashboardShell>

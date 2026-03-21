@@ -23,7 +23,7 @@ import {
 } from "@/components/ui";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { ProgressRing } from "@/components/shared/ProgressRing";
-import { SEED_MODULES, SEED_PATHWAY_TEMPLATES } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import { validatePathway } from "@/lib/validations/pathway-validator";
 import {
   cn, formatCurrency, formatDuration, getDifficultyColor,
@@ -131,8 +131,11 @@ function SortablePathwayItem({
 // Main Pathway Builder
 // ============================================
 export default function PathwayBuilderPage() {
-  const allModules = SEED_MODULES as Module[];
-  const template = SEED_PATHWAY_TEMPLATES[0]; // Full Stack Developer
+  const [allModules, setAllModules] = React.useState<Module[]>([]);
+  const supabaseClient = createSupabaseBrowser();
+  React.useEffect(() => { supabaseClient.from("modules").select("*").eq("is_published", true).order("title").then(({ data }) => { if (data) setAllModules(data as Module[]); }); }, []);
+  const [template, setTemplate] = React.useState<any>(null);
+  React.useEffect(() => { supabaseClient.from("pathway_templates").select("*").eq("is_published", true).limit(1).single().then(({ data }) => { if (data) setTemplate(data); }); }, []); // Full Stack Developer
 
   const [search, setSearch] = useState("");
   const [pathwayItems, setPathwayItems] = useState<PathwayItem[]>([]);

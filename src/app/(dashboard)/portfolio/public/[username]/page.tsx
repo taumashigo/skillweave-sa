@@ -10,7 +10,7 @@ import { Badge, Card, Button, Avatar, Separator } from "@/components/ui";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { formatDate } from "@/lib/utils";
-import { SEED_CREDENTIALS } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import type { Credential } from "@/types";
 
 // Mock public profile data
@@ -21,7 +21,7 @@ const profile = {
   role: "Learner",
   skills: ["Python", "JavaScript", "React", "Node.js", "SQL", "Git", "Figma", "Agile"],
   career_interests: ["Software Development", "Full Stack", "AI & Machine Learning"],
-  credentials: SEED_CREDENTIALS as Credential[],
+  credentials: [] as Credential[],
   portfolio: [
     { title: "E-Commerce Dashboard Redesign", type: "project", tags: ["React", "Figma", "UX Design"], url: "https://github.com/thabo/ecommerce" },
     { title: "Python Data Pipeline", type: "project", tags: ["Python", "Pandas"], url: "" },

@@ -35,7 +35,11 @@ const fadeUp = { hidden: { opacity: 0, y: 12 }, visible: (i: number) => ({ opaci
 export default function AdvisorDashboard() {
   return (
     <DashboardShell role="mentor" userName="Dr. Zanele Mthembu" userEmail="zanele@capaciti.org.za">
-      <PageHeader title="Advisor Dashboard" description="Guide your learners, review pathways, and provide targeted support." />
+      <PageHeader
+        title="Advisor Dashboard"
+        description="Guide your learners, review pathways, and provide targeted support."
+      />
+
       <div className="px-6 lg:px-8 py-8">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           {[
@@ -49,8 +53,10 @@ export default function AdvisorDashboard() {
             </motion.div>
           ))}
         </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            {/* Learner List */}
             <Card>
               <div className="p-6">
                 <h2 className="text-base font-semibold font-display text-slate-900 mb-4">My Learners</h2>
@@ -58,13 +64,24 @@ export default function AdvisorDashboard() {
                   {mockLearners.map((learner, i) => {
                     const status = statusConfig[learner.status];
                     return (
-                      <motion.div key={learner.name} custom={i + 4} initial="hidden" animate="visible" variants={fadeUp} className="flex items-center gap-4 p-3 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors">
+                      <motion.div
+                        key={learner.name}
+                        custom={i + 4}
+                        initial="hidden"
+                        animate="visible"
+                        variants={fadeUp}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-slate-200 hover:border-slate-300 transition-colors"
+                      >
                         <Avatar name={learner.name} size="md" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
                             <span className="text-sm font-medium text-slate-900">{learner.name}</span>
                             <Badge variant={status.variant} className="text-[10px]">{status.label}</Badge>
-                            {learner.remediations > 0 && <Badge variant="warning" className="text-[10px] gap-0.5"><LifeBuoy className="h-2.5 w-2.5" />{learner.remediations}</Badge>}
+                            {learner.remediations > 0 && (
+                              <Badge variant="warning" className="text-[10px] gap-0.5">
+                                <LifeBuoy className="h-2.5 w-2.5" />{learner.remediations}
+                              </Badge>
+                            )}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-slate-400">
                             <span><Route className="h-3 w-3 inline mr-0.5" />{learner.pathway}</span>
@@ -75,7 +92,9 @@ export default function AdvisorDashboard() {
                         </div>
                         <div className="text-right shrink-0">
                           <div className="text-lg font-bold font-display text-slate-900">{learner.progress}%</div>
-                          <Button variant="ghost" size="sm" className="text-xs mt-1"><Eye className="h-3 w-3 mr-1" />View</Button>
+                          <Button variant="ghost" size="sm" className="text-xs mt-1">
+                            <Eye className="h-3 w-3 mr-1" />View
+                          </Button>
                         </div>
                       </motion.div>
                     );
@@ -84,27 +103,36 @@ export default function AdvisorDashboard() {
               </div>
             </Card>
           </div>
+
+          {/* Sidebar */}
           <div className="space-y-6">
+            {/* Pending Reviews */}
             <Card>
               <div className="p-5">
                 <h2 className="text-base font-semibold font-display text-slate-900 mb-4">Pending Reviews</h2>
-                <div className="space-y-3">
-                  {pendingReviews.map((review, i) => (
-                    <div key={i} className="p-3 rounded-lg border border-amber-200 bg-amber-50/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
-                        <span className="text-xs font-semibold text-amber-800">{review.type}</span>
+                {pendingReviews.length > 0 ? (
+                  <div className="space-y-3">
+                    {pendingReviews.map((review, i) => (
+                      <div key={i} className="p-3 rounded-lg border border-amber-200 bg-amber-50/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />
+                          <span className="text-xs font-semibold text-amber-800">{review.type}</span>
+                        </div>
+                        <p className="text-xs text-amber-700 mb-2">{review.learner}: {review.details}</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" className="text-xs h-7 bg-amber-600 hover:bg-amber-700">Review</Button>
+                          <Button size="sm" variant="outline" className="text-xs h-7">Dismiss</Button>
+                        </div>
                       </div>
-                      <p className="text-xs text-amber-700 mb-2">{review.learner}: {review.details}</p>
-                      <div className="flex gap-2">
-                        <Button size="sm" className="text-xs h-7 bg-amber-600 hover:bg-amber-700">Review</Button>
-                        <Button size="sm" variant="outline" className="text-xs h-7">Dismiss</Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500">No pending reviews.</p>
+                )}
               </div>
             </Card>
+
+            {/* Quick Actions */}
             <Card className="p-5">
               <h2 className="text-base font-semibold font-display text-slate-900 mb-3">Actions</h2>
               <div className="space-y-2">

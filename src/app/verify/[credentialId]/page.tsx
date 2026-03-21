@@ -10,7 +10,7 @@ import {
 import { Button, Badge, Card, Separator } from "@/components/ui";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { SEED_CREDENTIALS } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import { formatDate } from "@/lib/utils";
 import type { Credential } from "@/types";
 
@@ -19,8 +19,24 @@ export default function VerifyCredentialPage({
 }: {
   params: { credentialId: string };
 }) {
-  // Mock: find credential by ID or show demo
-  const credential = (SEED_CREDENTIALS as Credential[])[0] || {
+  const supabase = createSupabaseBrowser();
+  const [credential, setCredential] = React.useState<any>({
+    id: params.credentialId,
+    type: "certificate",
+    title: "Loading...",
+    description: "",
+    issuer: "SkillWeave SA",
+    issued_at: new Date().toISOString(),
+    credential_hash: "",
+    is_verified: false,
+    metadata: {},
+  });
+  React.useEffect(() => {
+    supabase.from("credentials").select("*").eq("id", params.credentialId).single().then(({ data }) => {
+      if (data) setCredential(data);
+    });
+  }, [params.credentialId]);
+  const _unused = {
     id: params.credentialId,
     type: "certificate",
     title: "Python Programming Certificate",
@@ -137,14 +153,14 @@ export default function VerifyCredentialPage({
                     </div>
                   </div>
                 </div>
-                {meta.credits !== undefined && (
+                {meta.credits && (
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-slate-100 flex items-center justify-center">
                       <Shield className="h-4 w-4 text-slate-500" />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400">Credits (NQF {String(meta.nqf_level)})</div>
-                       <div className="text-sm font-medium text-slate-900">{String(meta.credits)} credits</div>
+                      <div className="text-xs text-slate-400">Credits (NQF {meta.nqf_level as string})</div>
+                      <div className="text-sm font-medium text-slate-900">{meta.credits as number} credits</div>
                     </div>
                   </div>
                 )}

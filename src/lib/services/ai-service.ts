@@ -1,323 +1,257 @@
-// ============================================
-// SkillWeave SA — AI Recommendation Service
-// Provider-abstracted with mock implementation
-// ============================================
-
 import type {
-  AIRecommendation,
-  SkillGapAnalysis,
-  Profile,
-  Module,
-  Enrollment,
+  AIRecommendation, SkillGapAnalysis, Profile, Module,
 } from "@/types";
-import { SEED_MODULES } from "@/data/seed";
-
-// ============================================
-// Service Interface
-// ============================================
 
 export interface IAIRecommendationService {
   getPathwayRecommendations(profile: Profile): Promise<AIRecommendation>;
-  getModuleRecommendations(
-    profile: Profile,
-    currentModules: string[]
-  ): Promise<AIRecommendation>;
-  getSkillGapAnalysis(
-    profile: Profile,
-    targetRole: string,
-    completedModules: string[]
-  ): Promise<SkillGapAnalysis>;
-  getRemediationSuggestions(
-    moduleId: string,
-    score: number,
-    attempts: number
-  ): Promise<AIRecommendation>;
-  getAffordabilitySuggestions(
-    profile: Profile,
-    selectedModuleIds: string[]
-  ): Promise<AIRecommendation>;
-  getEmployabilitySuggestions(
-    profile: Profile,
-    credentials: string[]
-  ): Promise<AIRecommendation>;
+  getModuleRecommendations(profile: Profile, currentModules: string[]): Promise<AIRecommendation>;
+  getSkillGapAnalysis(profile: Profile, targetRole: string, completedModules: string[]): Promise<SkillGapAnalysis>;
+  getRemediationSuggestions(moduleId: string, moduleTitle: string, score: number, attempts: number): Promise<AIRecommendation>;
+  getAffordabilitySuggestions(profile: Profile, selectedModuleIds: string[]): Promise<AIRecommendation>;
+  getEmployabilitySuggestions(profile: Profile, credentials: string[]): Promise<AIRecommendation>;
 }
 
 // ============================================
-// Mock AI Service
+// Anthropic Claude AI Service
 // ============================================
-
-export class MockAIRecommendationService implements IAIRecommendationService {
-  private modules = SEED_MODULES;
-
-  async getPathwayRecommendations(
-    profile: Profile
-  ): Promise<AIRecommendation> {
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 500));
-
-    const interests = profile.career_interests || [];
-    const targetJobs = profile.target_jobs || [];
-
-    // Simple matching logic
-    const relevantModules = this.modules
-      .filter((m) => {
-        const tags = [
-          ...(m.competency_tags || []),
-          ...(m.industry_tags || []),
-          ...(m.job_role_tags || []),
-        ].map((t) => t.toLowerCase());
-        return (
-          interests.some((i) =>
-            tags.some((t) => t.includes(i.toLowerCase()))
-          ) ||
-          targetJobs.some((j) =>
-            tags.some((t) => t.includes(j.toLowerCase()))
-          )
-        );
-      })
-      .slice(0, 8);
-
-    return {
-      type: "pathway",
-      title: "Recommended Pathway",
-      description: `Based on your interests in ${interests.slice(0, 3).join(", ")} and target roles in ${targetJobs.slice(0, 2).join(", ")}, we suggest this curated learning path.`,
-      confidence: 0.85,
-      items: relevantModules.map((m) => ({
-        id: m.id!,
-        title: m.title!,
-        reason: `Aligns with your interest in ${interests[0] || "tech"}`,
-      })),
-    };
-  }
-
-  async getModuleRecommendations(
-    profile: Profile,
-    currentModules: string[]
-  ): Promise<AIRecommendation> {
-    await new Promise((r) => setTimeout(r, 300));
-
-    const notEnrolled = this.modules.filter(
-      (m) => !currentModules.includes(m.id!)
-    );
-
-    const suggestions = notEnrolled
-      .sort((a, b) => (b.rating || 0) - (a.rating || 0))
-      .slice(0, 5);
-
-    return {
-      type: "module",
-      title: "Recommended Next Modules",
-      description:
-        "Based on your progress and interests, these modules would strengthen your pathway.",
-      confidence: 0.78,
-      items: suggestions.map((m) => ({
-        id: m.id!,
-        title: m.title!,
-        reason: `Highly rated (${m.rating}★) with ${m.enrollment_count} enrolled learners`,
-      })),
-    };
-  }
-
-  async getSkillGapAnalysis(
-    profile: Profile,
-    targetRole: string,
-    completedModules: string[]
-  ): Promise<SkillGapAnalysis> {
-    await new Promise((r) => setTimeout(r, 600));
-
-    // Mock skill gap based on role
-    const roleSkillMap: Record<string, string[]> = {
-      "Full Stack Developer": [
-        "JavaScript", "React", "Node.js", "PostgreSQL", "Git",
-        "API Design", "Testing", "DevOps", "Agile",
-      ],
-      "Data Scientist": [
-        "Python", "Statistics", "Machine Learning", "SQL",
-        "Data Visualization", "Pandas", "NumPy",
-      ],
-      "Digital Marketer": [
-        "SEO", "Social Media", "Content Marketing", "Google Ads",
-        "Analytics", "Email Marketing",
-      ],
-      "Project Manager": [
-        "Agile", "Scrum", "Risk Management", "Stakeholder Management",
-        "Leadership", "Communication",
-      ],
-    };
-
-    const requiredSkills = roleSkillMap[targetRole] || [
-      "Communication", "Problem Solving", "Teamwork",
-    ];
-
-    const completedSkills = completedModules
-      .map((id) => this.modules.find((m) => m.id === id))
-      .filter(Boolean)
-      .flatMap((m) => m!.competency_tags || []);
-
-    const currentSkills = [...new Set(completedSkills)];
-    const missingSkills = requiredSkills.filter(
-      (s) => !currentSkills.some((cs) => cs.toLowerCase().includes(s.toLowerCase()))
-    );
-
-    const gapPercentage =
-      requiredSkills.length > 0
-        ? Math.round((missingSkills.length / requiredSkills.length) * 100)
-        : 0;
-
-    const recommendedModules = missingSkills
-      .map((skill) => {
-        const mod = this.modules.find((m) =>
-          m.competency_tags?.some((t) =>
-            t.toLowerCase().includes(skill.toLowerCase())
-          )
-        );
-        return mod
-          ? { module_id: mod.id!, title: mod.title!, priority: 1 }
-          : null;
-      })
-      .filter(Boolean) as { module_id: string; title: string; priority: number }[];
-
-    return {
-      target_role: targetRole,
-      current_skills: currentSkills,
-      missing_skills: missingSkills,
-      recommended_modules: recommendedModules,
-      gap_percentage: gapPercentage,
-    };
-  }
-
-  async getRemediationSuggestions(
-    moduleId: string,
-    score: number,
-    attempts: number
-  ): Promise<AIRecommendation> {
-    await new Promise((r) => setTimeout(r, 300));
-
-    const mod = this.modules.find((m) => m.id === moduleId);
-
-    const items = [];
-    if (score < 40) {
-      items.push({
-        id: "rem-review",
-        title: "Review Core Concepts",
-        reason: "Your score suggests foundational concepts need reinforcement",
+class AnthropicAIService implements IAIRecommendationService {
+  private async callClaude(prompt: string): Promise<string> {
+    try {
+      const response = await fetch("/api/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
+      if (!response.ok) throw new Error("AI request failed");
+      const data = await response.json();
+      return data.response || "";
+    } catch (error) {
+      console.error("Claude API error:", error);
+      return "";
     }
-    if (attempts > 2) {
-      items.push({
-        id: "rem-practice",
-        title: "Additional Practice Exercises",
-        reason: "Multiple attempts indicate more practice would help",
-      });
-    }
-    items.push({
-      id: "rem-tutor",
-      title: "AI Tutor Session",
-      reason: "Get personalized guidance on challenging topics",
-    });
-    if (mod?.has_remediation) {
-      items.push({
-        id: "rem-booster",
-        title: `${mod.title} - Booster Lesson`,
-        reason: "Provider-created supplementary content available",
-      });
-    }
-
-    return {
-      type: "remediation",
-      title: "Remediation Suggestions",
-      description: `Based on your performance (${score}% across ${attempts} attempts), here are ways to strengthen your understanding.`,
-      confidence: 0.82,
-      items,
-    };
   }
 
-  async getAffordabilitySuggestions(
-    profile: Profile,
-    selectedModuleIds: string[]
-  ): Promise<AIRecommendation> {
-    await new Promise((r) => setTimeout(r, 300));
-
-    const selectedModules = selectedModuleIds
-      .map((id) => this.modules.find((m) => m.id === id))
-      .filter(Boolean);
-
-    const totalCost = selectedModules.reduce(
-      (sum, m) => sum + (m!.cost_cents || 0),
-      0
-    );
-
-    const freeAlternatives = this.modules.filter(
-      (m) =>
-        m.pricing_model === "free" &&
-        !selectedModuleIds.includes(m.id!) &&
-        selectedModules.some((sm) =>
-          sm!.competency_tags?.some((t) =>
-            m.competency_tags?.includes(t)
-          )
-        )
-    );
-
-    return {
-      type: "affordability",
-      title: "Affordability Options",
-      description: `Your current pathway costs R${(totalCost / 100).toFixed(0)}. Here are ways to reduce costs.`,
-      confidence: 0.9,
-      items: freeAlternatives.slice(0, 5).map((m) => ({
-        id: m.id!,
-        title: m.title!,
-        reason: `Free alternative covering similar skills`,
-      })),
-    };
+  private parseJSON(text: string): any {
+    try {
+      const match = text.match(/\{[\s\S]*\}/);
+      if (match) return JSON.parse(match[0]);
+      return null;
+    } catch { return null; }
   }
 
-  async getEmployabilitySuggestions(
-    profile: Profile,
-    credentials: string[]
-  ): Promise<AIRecommendation> {
-    await new Promise((r) => setTimeout(r, 400));
+  async getPathwayRecommendations(profile: Profile): Promise<AIRecommendation> {
+    const prompt = `You are a South African education advisor for SkillWeave SA, a modular learning platform aligned with SAQA/NQF standards.
 
-    return {
-      type: "job",
-      title: "Employability Insights",
-      description:
-        "Based on your credentials and the current SA job market, here are ways to improve your employability.",
-      confidence: 0.75,
-      items: [
-        {
-          id: "emp-portfolio",
-          title: "Build Your Portfolio",
-          reason: "Employers value demonstrated work over certificates alone",
-        },
-        {
-          id: "emp-experience",
-          title: "Apply for Experiential Projects",
-          reason: "Real-world experience significantly boosts your CV",
-        },
-        {
-          id: "emp-network",
-          title: "Attend Industry Events",
-          reason: "Networking is the #1 way people find jobs in SA",
-        },
-      ],
-    };
+A learner has these details:
+- Career interests: ${(profile.career_interests || []).join(", ") || "not specified"}
+- Target jobs: ${(profile.target_jobs || []).join(", ") || "not specified"}
+- Skills interests: ${(profile.skills_interests || []).join(", ") || "not specified"}
+- Budget: ${profile.budget_preference || "flexible"}
+- Prior learning: ${profile.prior_learning_summary || "none specified"}
+
+Suggest a personalized learning pathway. Respond ONLY with a JSON object in this exact format, no other text:
+{
+  "title": "Recommended Pathway Name",
+  "description": "2-3 sentence description of why this pathway suits them",
+  "confidence": 0.85,
+  "items": [
+    {"id": "1", "title": "Module name", "reason": "Why this module is recommended"},
+    {"id": "2", "title": "Module name", "reason": "Why this module is recommended"}
+  ]
+}
+
+Include 5-8 module suggestions relevant to the South African job market.`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return { type: "pathway", title: parsed.title, description: parsed.description, confidence: parsed.confidence || 0.8, items: parsed.items || [] };
+    }
+    return { type: "pathway", title: "Recommended Pathway", description: "Based on your profile, we suggest starting with foundational modules.", confidence: 0.7, items: [] };
+  }
+
+  async getModuleRecommendations(profile: Profile, currentModules: string[]): Promise<AIRecommendation> {
+    const prompt = `You are a South African education advisor. A learner on SkillWeave SA has completed these modules: ${currentModules.join(", ") || "none yet"}.
+
+Their interests: ${(profile.career_interests || []).join(", ") || "general"}.
+Their target jobs: ${(profile.target_jobs || []).join(", ") || "not specified"}.
+
+Suggest 5 next modules they should take. Respond ONLY with JSON:
+{
+  "title": "Recommended Next Modules",
+  "description": "Brief explanation",
+  "confidence": 0.8,
+  "items": [
+    {"id": "1", "title": "Module name", "reason": "Why recommended"}
+  ]
+}`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return { type: "module", ...parsed };
+    }
+    return { type: "module", title: "Recommended Modules", description: "Complete more modules to get personalized recommendations.", confidence: 0.6, items: [] };
+  }
+
+  async getSkillGapAnalysis(profile: Profile, targetRole: string, completedModules: string[]): Promise<SkillGapAnalysis> {
+    const prompt = `You are a South African career advisor. Analyze the skill gap for:
+
+Target role: ${targetRole}
+Completed modules: ${completedModules.join(", ") || "none"}
+Current skills: ${(profile.skills_interests || []).join(", ") || "none specified"}
+
+Respond ONLY with JSON:
+{
+  "target_role": "${targetRole}",
+  "current_skills": ["skill1", "skill2"],
+  "missing_skills": ["skill1", "skill2"],
+  "recommended_modules": [
+    {"module_id": "1", "title": "Module name", "priority": 1}
+  ],
+  "gap_percentage": 45
+}
+
+Base this on the real South African job market requirements for ${targetRole}.`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return parsed as SkillGapAnalysis;
+    }
+    return { target_role: targetRole, current_skills: [], missing_skills: ["Unable to analyze"], recommended_modules: [], gap_percentage: 50 };
+  }
+
+  async getRemediationSuggestions(moduleId: string, moduleTitle: string, score: number, attempts: number): Promise<AIRecommendation> {
+    const prompt = `You are a learning support advisor on SkillWeave SA, a South African learning platform.
+
+A learner scored ${score}% on "${moduleTitle}" after ${attempts} attempt(s).
+
+Provide specific, actionable remediation suggestions. Respond ONLY with JSON:
+{
+  "title": "Remediation Plan",
+  "description": "Brief overview of the support plan",
+  "confidence": 0.85,
+  "items": [
+    {"id": "1", "title": "Specific action", "reason": "Why this will help"}
+  ]
+}
+
+Include 3-5 suggestions covering: concept review, practice exercises, alternative learning formats, and when to seek mentor help.`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return { type: "remediation", ...parsed };
+    }
+    return { type: "remediation", title: "Remediation Support", description: `Review the core concepts and try again.`, confidence: 0.7, items: [
+      { id: "1", title: "Review core concepts", reason: "Strengthen foundational understanding" },
+      { id: "2", title: "Practice exercises", reason: "Build confidence through repetition" },
+      { id: "3", title: "Request mentor support", reason: "Get personalized guidance" },
+    ]};
+  }
+
+  async getAffordabilitySuggestions(profile: Profile, selectedModuleIds: string[]): Promise<AIRecommendation> {
+    const prompt = `You are a financial advisor for learners on SkillWeave SA in South Africa.
+
+A learner with budget preference "${profile.budget_preference || "flexible"}" has selected ${selectedModuleIds.length} modules.
+
+Suggest ways to reduce costs. Respond ONLY with JSON:
+{
+  "title": "Affordability Options",
+  "description": "Brief summary",
+  "confidence": 0.8,
+  "items": [
+    {"id": "1", "title": "Suggestion", "reason": "How this saves money"}
+  ]
+}
+
+Include suggestions about free alternatives, bursaries, employer-funded options, NSFAS, and Sector Education and Training Authorities (SETAs) in South Africa.`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return { type: "affordability", ...parsed };
+    }
+    return { type: "affordability", title: "Affordability Options", description: "Explore free and funded alternatives.", confidence: 0.7, items: [] };
+  }
+
+  async getEmployabilitySuggestions(profile: Profile, credentials: string[]): Promise<AIRecommendation> {
+    const prompt = `You are a South African career coach on SkillWeave SA.
+
+A learner has earned these credentials: ${credentials.join(", ") || "none yet"}.
+Their target jobs: ${(profile.target_jobs || []).join(", ") || "not specified"}.
+Province: ${profile.province || "not specified"}.
+
+Provide specific employability advice for the South African job market. Respond ONLY with JSON:
+{
+  "title": "Employability Insights",
+  "description": "Brief overview",
+  "confidence": 0.8,
+  "items": [
+    {"id": "1", "title": "Action item", "reason": "Why this improves employability"}
+  ]
+}
+
+Include advice on networking, portfolio building, LinkedIn, job boards (Careers24, PNet, OfferZen), and interview preparation specific to SA.`;
+
+    const text = await this.callClaude(prompt);
+    const parsed = this.parseJSON(text);
+
+    if (parsed) {
+      return { type: "job", ...parsed };
+    }
+    return { type: "job", title: "Employability Insights", description: "Build your portfolio and network to improve your chances.", confidence: 0.7, items: [
+      { id: "1", title: "Build a portfolio", reason: "Employers value demonstrated work" },
+      { id: "2", title: "Apply for experiential projects", reason: "Real-world experience boosts your CV" },
+      { id: "3", title: "Network on LinkedIn", reason: "Most SA jobs are found through connections" },
+    ]};
   }
 }
 
 // ============================================
-// Service Factory
+// Mock fallback (same as before, simplified)
 // ============================================
+class MockAIService implements IAIRecommendationService {
+  async getPathwayRecommendations(profile: Profile): Promise<AIRecommendation> {
+    await new Promise(r => setTimeout(r, 300));
+    return { type: "pathway", title: "Recommended Pathway", description: "Based on your interests, start with foundational modules.", confidence: 0.7, items: [
+      { id: "1", title: "Digital Literacy Foundations", reason: "Essential starting point" },
+      { id: "2", title: "Professional Communication", reason: "Required for all careers" },
+      { id: "3", title: "Career Readiness", reason: "Job search preparation" },
+    ]};
+  }
+  async getModuleRecommendations(): Promise<AIRecommendation> {
+    return { type: "module", title: "Next Steps", description: "Continue building your skills.", confidence: 0.7, items: [] };
+  }
+  async getSkillGapAnalysis(_p: Profile, targetRole: string): Promise<SkillGapAnalysis> {
+    return { target_role: targetRole, current_skills: [], missing_skills: ["Analysis unavailable in mock mode"], recommended_modules: [], gap_percentage: 50 };
+  }
+  async getRemediationSuggestions(): Promise<AIRecommendation> {
+    return { type: "remediation", title: "Support", description: "Review and try again.", confidence: 0.7, items: [{ id: "1", title: "Review material", reason: "Strengthen understanding" }] };
+  }
+  async getAffordabilitySuggestions(): Promise<AIRecommendation> {
+    return { type: "affordability", title: "Options", description: "Look for free alternatives.", confidence: 0.7, items: [] };
+  }
+  async getEmployabilitySuggestions(): Promise<AIRecommendation> {
+    return { type: "job", title: "Tips", description: "Build your portfolio.", confidence: 0.7, items: [] };
+  }
+}
 
+// ============================================
+// Factory
+// ============================================
 let _instance: IAIRecommendationService | null = null;
 
 export function getAIService(): IAIRecommendationService {
   if (!_instance) {
-    const provider = process.env.AI_PROVIDER || "mock";
-    switch (provider) {
-      case "mock":
-      default:
-        _instance = new MockAIRecommendationService();
-    }
+    const provider = typeof window !== "undefined" ? "anthropic" : (process.env.AI_PROVIDER || "mock");
+    _instance = provider === "anthropic" ? new AnthropicAIService() : new MockAIService();
   }
   return _instance;
 }

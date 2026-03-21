@@ -34,7 +34,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/lib/hooks";
 import { Avatar } from "@/components/ui";
 import type { UserRole } from "@/types";
 
@@ -92,19 +91,13 @@ const adminLinks: SidebarLink[] = [
   { label: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
-function getLinksForRole(role: string): SidebarLink[] {
+function getLinksForRole(role: UserRole): SidebarLink[] {
   switch (role) {
     case "employer": return employerLinks;
     case "provider": return providerLinks;
     case "mentor":
     case "assessor": return advisorLinks;
     case "admin": return adminLinks;
-    case "sponsor": return [
-      { label: "Dashboard", href: "/sponsor/dashboard", icon: LayoutDashboard },
-      { label: "Learners", href: "/sponsor/dashboard", icon: Users },
-      { label: "Funded Modules", href: "/catalog", icon: Package },
-      { label: "Impact Reports", href: "/sponsor/dashboard", icon: BarChart3 },
-    ];
     default: return learnerLinks;
   }
 }
@@ -123,7 +116,6 @@ export function DashboardSidebar({
   userAvatar,
 }: DashboardSidebarProps) {
   const pathname = usePathname();
-  const { signOut } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const links = getLinksForRole(role);
@@ -202,7 +194,7 @@ export function DashboardSidebar({
               <Settings className="h-3.5 w-3.5" />
               Settings
             </Link>
-            <button onClick={async () => { await signOut(); window.location.href = "/login"; }} className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
+            <button className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs text-slate-500 hover:bg-red-50 hover:text-red-600 transition-colors">
               <LogOut className="h-3.5 w-3.5" />
               Log out
             </button>

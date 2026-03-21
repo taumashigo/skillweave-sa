@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Award, Download, Share2, QrCode, Shield, Filter } from "lucide-react";
 import { Button, Badge, Card, EmptyState } from "@/components/ui";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { CredentialCard } from "@/components/credentials/CredentialCard";
-import { SEED_CREDENTIALS } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
+import { useAuth } from "@/lib/hooks";
 import type { Credential } from "@/types";
 
 const fadeUp = {
@@ -16,8 +17,17 @@ const fadeUp = {
   }),
 };
 
+const supabase = createSupabaseBrowser();
+
 export default function WalletPage() {
-  const credentials = SEED_CREDENTIALS as Credential[];
+  const { profile } = useAuth();
+  const [credentials, setCredentials] = React.useState<Credential[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  React.useEffect(() => {
+    if (!profile?.user_id) { setLoading(false); return; }
+    supabase.from("credentials").select("*").eq("user_id", profile.user_id).order("issued_at", { ascending: false }).then(({ data }) => { if (data) setCredentials(data as Credential[]); setLoading(false); });
+  }, [profile?.user_id]);
+  
 
   return (
     <DashboardShell>

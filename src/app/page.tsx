@@ -12,9 +12,11 @@ import { Button, Badge, Card } from "@/components/ui";
 import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { SEED_MODULES, SEED_OPPORTUNITIES } from "@/data/seed";
 import { ModuleCard } from "@/components/modules/ModuleCard";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import type { Module } from "@/types";
+
+const supabase = createSupabaseBrowser();
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -72,7 +74,10 @@ const features = [
 ];
 
 export default function HomePage() {
-  const featuredModules = (SEED_MODULES as Module[]).slice(0, 6);
+  const [featuredModules, setFeaturedModules] = React.useState<Module[]>([]);
+  React.useEffect(() => {
+    supabase.from("modules").select("*").eq("is_published", true).order("rating", { ascending: false }).limit(6).then(({ data }) => { if (data) setFeaturedModules(data as Module[]); });
+  }, []);
 
   return (
     <div className="min-h-screen bg-white">

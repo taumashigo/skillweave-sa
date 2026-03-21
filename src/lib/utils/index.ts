@@ -14,17 +14,11 @@ export function formatCurrency(cents: number, currency = "ZAR"): string {
 }
 
 export function formatDate(date: string | Date): string {
-  try {
-    const d = new Date(date);
-    if (isNaN(d.getTime())) return "—";
-    return new Intl.DateTimeFormat("en-ZA", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(d);
-  } catch {
-    return "—";
-  }
+  return new Intl.DateTimeFormat("en-ZA", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  }).format(new Date(date));
 }
 
 export function formatDuration(hours: number): string {

@@ -5,15 +5,18 @@ import { Package, Star, Users, Eye, Edit, Shield, CheckCircle2, Search } from "l
 import { Button, Badge, Card, Input, Progress } from "@/components/ui";
 import { DashboardShell, PageHeader } from "@/components/layout/DashboardShell";
 import { formatCurrency } from "@/lib/utils";
-import { SEED_MODULES } from "@/data/seed";
+import { createSupabaseBrowser } from "@/lib/supabase-browser";
 import type { Module } from "@/types";
 
+const supabase = createSupabaseBrowser();
+
 export default function AdminModulesPage() {
-  const modules = (SEED_MODULES as Module[]).slice(0, 15);
+  const [modules, setModules] = React.useState<Module[]>([]);
+  React.useEffect(() => { supabase.from("modules").select("*").eq("is_published", true).order("rating", { ascending: false }).limit(15).then(({ data }) => { if (data) setModules(data as Module[]); }); }, []);
 
   return (
     <DashboardShell role="admin" userName="Admin User" userEmail="admin@skillweave.co.za">
-      <PageHeader title="Module Management" description={`${SEED_MODULES.length} modules across all providers.`} />
+      <PageHeader title="Module Management" description={`modules across all providers across all providers.`} />
       <div className="px-6 lg:px-8 py-8">
         <div className="relative max-w-md mb-6">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -47,8 +50,8 @@ export default function AdminModulesPage() {
                   <td className="py-2.5 px-3 text-center"><Badge variant={m.pricing_model === "free" ? "free" : "secondary"} className="text-[9px]">{m.pricing_model === "free" ? "Free" : formatCurrency(m.cost_cents)}</Badge></td>
                   <td className="py-2.5 px-3 text-center">
                     <div className="flex items-center justify-center gap-1">
-                      {m.is_accredited && <span title="Accredited"><Shield className="h-3 w-3 text-blue-500" /></span>}
-                      {m.employer_endorsed && <span title="Endorsed"><CheckCircle2 className="h-3 w-3 text-emerald-500" /></span>}
+                      {m.is_accredited && <Shield className="h-3 w-3 text-blue-500" title="Accredited" />}
+                      {m.employer_endorsed && <CheckCircle2 className="h-3 w-3 text-emerald-500" title="Endorsed" />}
                     </div>
                   </td>
                   <td className="py-2.5 px-3 text-right"><Button variant="ghost" size="icon" className="h-7 w-7"><Eye className="h-3.5 w-3.5" /></Button></td>
